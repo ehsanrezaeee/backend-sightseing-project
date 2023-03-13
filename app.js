@@ -2,6 +2,8 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const HttpError = require("./models/error-model");
+const dotenv = require("dotenv");
+dotenv.config();
 
 const placeRoute = require("./routes/places-routes");
 
@@ -28,11 +30,9 @@ app.use((error, req, res, next) => {
 });
 
 mongoose
-  .connect(
-    "mongodb+srv://Admin-Ehsan:Test123@cluster0.p4ugnh8.mongodb.net/places?retryWrites=true&w=majority"
-  )
+  .connect(process.env.MONGO)
   .then(() => {
-    app.listen(5000, () => {
+    app.listen(process.env.PORT, () => {
       console.log("server is running");
     });
   })
