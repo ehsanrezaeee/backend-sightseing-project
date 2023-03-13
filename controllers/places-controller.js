@@ -1,4 +1,5 @@
-const { v4: uuidv4 } = require("uuid");
+const place = require("../models/place");
+const { validationResult } = require("express-validator");
 
 const HttpError = require("../models/error-model");
 
@@ -41,29 +42,39 @@ const getPlaceById = (req, res, next) => {
   res.json({ place });
 };
 
-const getplaceByUserId = (req, res, next) => {
+const getplacesByUserId = (req, res, next) => {
   const userId = req.params.uid;
-  const place = Dummy_Places.find((p) => {
+  const places = Dummy_Places.filter((p) => {
     return p.creator === userId;
   });
-  if (!place) {
+  if (!places || places.length === 0) {
     return next(new HttpError("could not find a place", 404));
   }
-  res.json({ place: place });
+  res.json({ places: places });
 };
 
-const createPlace = (req, res, next) => {
+const createPlace = async (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return next(new HttpError("Invalid data", 422));
+  }
+
   const { title, description, coordinates, address, creator } = req.body;
-  const createdPlace = {
-    id: uuidv4(),
+  const createdPlace = new place({
     title,
     description,
     location: coordinates,
     address,
+    image: "http://www.poliran.org/uploads/project/structure/milad.jpg",
     creator,
-  };
+  });
+  try {
+    await createdPlace.save();
+  } catch (err) {
+    const error = new HttpError("creating place failed, try again", 500);
+    return next(error);
+  }
 
-  Dummy_Places.push(createdPlace);
   res.status(201).json({ place: createdPlace });
 };
 
@@ -87,7 +98,7 @@ const DeletePlaceById = (req, res, next) => {
 };
 
 exports.getPlaceById = getPlaceById;
-exports.getplaceByUserId = getplaceByUserId;
+exports.getplacesByUserId = getplacesByUserId;
 exports.createPlace = createPlace;
 exports.UpdatePlaceById = UpdatePlaceById;
 exports.DeletePlaceById = DeletePlaceById;
