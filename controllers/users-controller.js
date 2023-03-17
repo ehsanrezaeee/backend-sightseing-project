@@ -1,4 +1,5 @@
 const { uuid } = require("uuidv4");
+const { validationResult } = require("express-validator");
 
 const HttpError = require("../models/error-model");
 
@@ -22,6 +23,10 @@ const getAllUsers = (req, res, next) => {
 };
 
 const registerUsers = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return next(new HttpError("Invalid data", 422));
+  }
   const { email, name, password } = req.body;
 
   const hasUser = Dummy_Users.find((p) => {
